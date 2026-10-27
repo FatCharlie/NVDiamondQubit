@@ -2,6 +2,8 @@
 
 Oct 26, 2026 · @Charlie
 
+*WARNING: AI GENERATED. I will rewrite as I build it.*
+
 ## How to use this doc
 
 This is the build plan only; theory lives in a separate file. Each stage is a **milestone**. Each item with an ID (S1-04, D2) is **one ticket**: the bold line is the ticket title, the text under it is the description, and **Done when** is the acceptance criteria. Decision tickets (D-) block purchases, so close those first.
