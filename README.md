@@ -2,7 +2,7 @@
 
 Oct 26, 2026 · @Charlie
 
-*WARNING: AI GENERATED. I will rewrite as I build it.*
+## *WARNING: AI Generated, I will start editing this as I put it together*
 
 ## How to use this doc
 
@@ -12,7 +12,7 @@ This is the build plan only; theory lives in a separate file. Each stage is a **
 
 | Stage | Goal | What you have at the end | Rough cost | Status |
 | --- | --- | --- | --- | --- |
-| 1. Uncut Gem | See the spin resonance | Palm-sized board; OLED shows a dip near 2.87 GHz that reacts to a magnet | about $175 to $250, plus diamond (quote pending) | Ready to start |
+| 1. Uncut Gem on Pi | See the spin resonance | Pi 4 plus RF modules; a plot shows a dip near 2.87 GHz that reacts to a magnet | about $300 to $360 including the diamond | Ready to start |
 | 2. Cleaner instrument | Measure with it | Bench setup; laptop shows clean, calibrated dip pairs | about $4,500 in the published build | Needs BOM |
 | 3. Pulsed control | Control it as a qubit | Rabi oscillation curve you produce on purpose | Not scoped | Scope after Stage 1 |
 | 4. Research grade | Single NV, few-qubit register | Reference only | Tens of thousands of dollars | Out of scope |
@@ -26,117 +26,133 @@ Every stage runs the same chain and upgrades one weak link: **green light in, mi
 - Disconnect power before touching the board; check for shorts before every power-up.
 - Keep microwave antennas away from your face while running.
 - Neodymium magnets pinch, chip, and wipe cards; keep them away from electronics you care about.
-- Power from an isolated or protected USB supply, not a bare laptop port.
+- Power the Pi from its official supply; power down before rewiring anything on the header.
 - The repo's SAFETY.md also says not to work alone and to keep one hand away from live equipment.
 
 ## Decisions (close before ordering)
 
-**D1 · Diamond: powder now or bulk now** Stage 1 is designed around cheap microdiamond powder (many tiny crystals, random orientations, smeared signal). A bulk plate (one crystal, fixed orientations, clean signal) costs much more and is the Stage 2 upgrade. Decided Oct 26, 2026: microdiamond powder now, bulk plate in Stage 2. Status: closed.
+**D1 · Diamond: powder now or bulk now** Stage 1 is designed around cheap microdiamond powder (many tiny crystals, random orientations, smeared signal). A bulk plate (one crystal, fixed orientations, clean signal) costs much more and is the Stage 2 upgrade. Decided Oct 26, 2026: microdiamond powder now, bulk plate in Stage 2. Revised Oct 28, 2026: a single \~800 µm NV crystal instead of powder, on Adámas's recommendation. One crystal has only four NV axis directions, so a magnet gives clean, separate dip pairs instead of one smeared dip; a polished plate stays the Stage 2 upgrade. Status: closed.
 
-**D2 · Diamond supplier** Decided Oct 27, 2026: Adámas Nanotechnologies (Raleigh, NC), Low Nitrogen Microdiamond with NV centers, **SKU FMDNVLN1-10mg** (150 to 200 µm, 20 to 30 ppm N). Of their three low-N grades it has the highest ODMR contrast (10.2%, measured by Adámas under green LED excitation, which matches this build); FMDNVLN2 and FMDNVLN3 trade contrast for narrower lines, which matters in Stage 2, not here. No list price online; a UK reseller lists a similar 10 mg grade near £373. Quote request drafted in Gmail to info@adamasnano.com (not sent). Element Six sells bulk plates only, so it moves to Stage 2. **Done when:** price, lead time and shipping to NM recorded.
+**D2 · Diamond supplier** Decided Oct 27, 2026: Adámas Nanotechnologies (Raleigh, NC), Encapsulated 800 µm NV microdiamond, **SKU ENMDNV800, $200**: one \~800 µm crystal sealed in a clear polymer block about 12.5 × 12.5 × 7 mm, shipped with its own ODMR spectrum. Recommended by Marco Torelli at Adámas for this kind of build; it replaces the powder grade FMDNVLN1-10mg. Reply drafted in Gmail asking about lead time, shipping, polymer transparency, crystal orientation and the conditions behind their ODMR data (not sent). Element Six sells bulk plates only, so it moves to Stage 2. **Done when:** lead time and shipping to NM recorded and the order placed.
 
-**D3 · Light source: LED or laser** Decided Oct 27, 2026: green LED, **Cree C503B-GCN-CY0C0791** (5 mm, 527 nm, 30° beam, 3.2 V typical / 4.0 V max at 20 mA, 30 mA max) with a **100 Ω ¼ W** series resistor: I = (5 V − 3.2 V) / 100 Ω ≈ 18 mA. Wire it always on: anode to header 5V\_SUPP1 pin 4 (5 V), cathode through the resistor to pin 5 (GND). That skips Q4, which has no base resistor in the V2 schematic, and the stock firmware never drives GPIO16 (LASER\_CTRL) anyway. Trade-off accepted: less light on the diamond than a laser, so a smaller dip. **Status:** closed.
+**D3 · Light source: LED or laser** Decided Oct 27, 2026: green LED, **Cree C503B-GCN-CY0C0791** (5 mm, 527 nm, 30° beam, 3.2 V typical / 4.0 V max at 20 mA, 30 mA max) with a **100 Ω ¼ W** series resistor: I = (5 V − 3.2 V) / 100 Ω ≈ 18 mA. Wire it always on: anode to Pi header pin 4 (5 V), cathode through the resistor to GND. Trade-off accepted: less light on the diamond than a laser, so a smaller dip. **Status:** closed.
 
-**D4 · RF hardware** Decided Oct 27, 2026. On V2 the synthesizer (ADF4351) and both amplifier stages are on the board, so there is no separate RF board or SMA cable to buy.
+**D4 · Platform and RF hardware** Decided Oct 27, 2026: your Raspberry Pi 4 Model B replaces the Uncut Gem's ESP32 and custom board. The RF side reuses the module pair the Uncut Gem V1 used.
 
-- **Amplifier U2/U3: NXP MMG3014NT1**, as in the authors' newer production BOM (`ProdFiles/Uncut Gem3.csv`) and the schematic. The GALI-84 in the older BOM CSV needs 5.4 to 6.2 V at the device; this board feeds the amps 5 V through a diode (D2/D3), about 4.6 V, so a GALI-84 would be under-biased.
-- MMG3014NT1 is end-of-life (last-time buy passed June 2026). LCSC showed 19 in stock (C2151399): buy 4 to 6 now. Fallback: **Qorvo SBB5089Z** (LCSC C19631614, 964 in stock), same SOT-89 pinout, runs straight from 5 V; with it, fit 0 Ω links instead of D2/D3.
-- **D2/D3:** Comchip CDBU0530 (0603, 0.5 A Schottky). Each amp draws about 135 mA, too much for a 1N4148-class diode.
-- **D8** (USB 5 V series diode, SOD-123F): B5819W SL, 1 A Schottky (LCSC C8598). The schematic calls it a zener; a zener would be wrong there.
-- **Antenna:** J4 (SMA) is not fitted in the authors' BOM; solder the enameled wire loop straight to the J4 pads.
+- **Synthesizer:** "35M-4.4GHz ADF4351 development board": the bare board with a 10-pin control header, 25 MHz onboard reference, SMA outputs, 5 V in at about 110 to 145 mA. Buy the bare board, not versions with an STM32 controller or touchscreen. Output is close to 0 dBm over most of its range. Its logic is 3.3 V, so it wires straight to the Pi. About $25 to $45.
+- **Amplifier:** 30 to 4000 MHz, 40 dB broadband amplifier board, 5 V at 135 mA, about +20 dBm at 1 dB compression; the same type V1 used. About $6 to $15. Gain at 2.87 GHz isn't published; expect less than 40 dB near the top of its range, which is still plenty.
+- **Antenna:** an SMA male pigtail with a small enameled-wire loop soldered on, placed at the diamond.
+- **V2 custom board:** shelved. The JLCPCB files stay in the vault at `qc/nv-diamond/jlcpcb/`.
 
 **Status:** closed.
 
-**D5 · Power supply** Decided Oct 27, 2026: any USB-A power bank (2 A or more) plus a short **USB-A to USB-C data cable**. Expected draw is roughly 0.4 to 0.5 A (two amps at about 135 mA each, the ADF4351, the ESP32), so for laptop logging use a USB 3 port or a powered hub, not a 500 mA USB 2 port. V2 USB-C quirk (from the PCB file): only one side of the connector is wired (CC2 and the second D+/D− pair are unconnected). USB data works in one plug orientation only, and a USB-C to C charger may power it in one orientation only. If the board doesn't power up or no serial port appears, flip the plug; an A-to-C cable always delivers 5 V. **Status:** closed.
+**D5 · Power supply** Decided Oct 27, 2026: the official Raspberry Pi 4 USB-C supply (5.1 V, 3 A) powers everything. The ADF4351 board, amp board and LED draw about 300 mA from the Pi's 5 V pins (2 and 4); the ADS1115 and op-amp take a few mA from 3.3 V (pin 1). **Status:** closed.
 
-**D6 · V2 assembly route** Decided Oct 27, 2026: JLCPCB PCB plus top-side SMT assembly. V2 uses 0.5 mm-pitch QFNs (ADF4351, CP2102N), which are impractical to hand-solder; all SMD parts sit on the top side. Upload files: the BOM and CPL are in the vault at `qc/nv-diamond/jlcpcb/`: `UncutGem-V2-BOM-JLCPCB.csv` and `UncutGem-V2-CPL-JLCPCB.csv` (90 placements, built from the PCB file, not the stale BOM CSV); the Gerbers zip is the repo's hardware/PCB/ProdFiles folder zipped, sent in chat on Oct 27. Board: 2-layer, 1.6 mm, 82.4 × 82.4 mm octagon. Left out on purpose: J1 to J4 (unused SMAs) and R3/R4 (schematic note: do not populate). Hand-solder the through-hole parts (5V\_SUPP1, OLED socket, photodiode socket). In JLCPCB's preview, check the rotation of U1, U2/U3, U6, U8, Q4 to Q6 and P1 before paying. My rough estimate for 2 assembled boards: $120 to $180 before shipping and import duties; the ADF4351 alone is about $17 per board. **Done when:** JLCPCB quote saved and order placed.
+**D6 · Photodiode amplifier and ADC** Decided Oct 27, 2026. The Pi has no analog inputs and its pins are 3.3 V only, so:
 
-## Stage 1: Uncut Gem V2
+- **ADC: ADS1115 module** (16-bit, I2C at address 0x48, up to 860 samples/s, ranges down to ±0.256 V), Adafruit 1085 or a generic module, powered from 3.3 V.
+- **Amplifier: one MCP6002 stage on perfboard** (DIP-8, rail-to-rail, 1.8 to 6 V supply, 1 pA input bias), powered from 3.3 V. The photodiode runs at zero bias with 10 MΩ ∥ 10 pF feedback: V = I × 10 MΩ, so 100 nA gives 1 V; bandwidth 1 / (2π · 10 MΩ · 10 pF) ≈ 1.6 kHz. The output can't exceed 3.3 V, which is exactly the ADC's safe input range. The original two-stage TL082 circuit needed a 5 V rail and a 2.5 V midpoint and could overdrive a 3.3 V input; the ADS1115's gain settings replace its second stage.
+
+**Status:** closed.
+
+**D7 · Software** Decided Oct 27, 2026: Python on the Pi, in the vault at `qc/nv-diamond/pi/`: `adf4351.py` (register math and SPI driver; register words match the open-source adf435x library at 5,049 test frequencies), `ads1115.py`, and `sweep.py` (sweeps, averaging, CSV, PNG plot; `--sim` runs without hardware). Each point is read with microwaves on and off and reported as contrast C = (V\_on − V\_off) / V\_off, which cancels LED and temperature drift. **Status:** closed; first real-hardware test is S1-06.
+
+## Stage 1: Uncut Gem on a Raspberry Pi
 
 ### What it is
 
-One palm-sized board (V2, Rev 0.2), USB-C powered and factory-assembled. The on-board ESP32 tells the on-board ADF4351 microwave chip which frequency to make; two on-board amplifiers boost it; a wire loop antenna soldered to the board radiates it at a few grains of diamond in epoxy. A green LED makes the diamond glow red; a red filter passes only that glow to a photodiode; two op-amp stages turn the photodiode current into a voltage; the ESP32 reads it at each frequency and draws brightness vs frequency on a 1.3" OLED.
+Your Pi 4 runs a Python script that tells an ADF4351 synthesizer board which microwave frequency to make; an amplifier board boosts it; a wire loop antenna radiates it at a single diamond crystal sealed in a polymer block. A green LED makes the diamond glow red; a red filter passes only that glow to a photodiode; a one-stage op-amp turns the photodiode current into a voltage; an ADS1115 converts it for the Pi, which logs brightness vs frequency and plots it.
 
 ### What it looks like when done
 
-- Board on the bench in a dimmed room, green LED lit, diamond glowing faintly red through red film.
-- OLED: "Calibrating..." on boot, then a mostly flat trace with a shallow dip near the middle (2.87 GHz). With powder the dip is small, around a percent of total brightness or less.
-- Magnet brought close: the dip widens and spreads. Magnet removed: it shrinks back.
-- Light blocked: the magnet no longer changes anything.
+- On the bench in a dimmed room: the Pi, two small RF boards joined by an SMA cable, and a perfboard with the op-amp; green LED lit, diamond glowing faintly red through red film.
+- On the monitor: a plot of contrast vs frequency, flat with a dip near 2870 MHz. Compare its depth with the ODMR spectrum Adámas ships with the crystal.
+- Magnet brought close: the dip splits into up to four separate pairs, one per NV axis, each at 2870 ± 28 · B∥ MHz (B∥ is the field along that axis, in mT). Magnet removed: it comes back.
+- Light blocked: the dip disappears.
+
+### Wiring
+
+Pi header pins are physical pin numbers. Match the ADF4351 board by its silkscreen labels; pin order differs between board versions.
+
+| From | To | Notes |
+| --- | --- | --- |
+| Pi pin 2 (5 V) | ADF4351 board 5 V in, amp board 5 V | About 280 mA together |
+| Pi pin 4 (5 V) | LED anode | LED cathode, then 100 Ω, then GND |
+| Pi pin 6 (GND) | ADF4351 GND, amp GND, ADS1115 GND, op-amp pin 4 | One common ground |
+| Pi pin 19 (GPIO10, MOSI) | ADF4351 DATA |  |
+| Pi pin 23 (GPIO11, SCLK) | ADF4351 CLK |  |
+| Pi pin 24 (GPIO8, CE0) | ADF4351 LE | Add 10 kΩ from LE to GND |
+| Pi pin 22 (GPIO25) | ADF4351 CE | Chip enable, driven high by the script |
+| Pi pin 18 (GPIO24) | ADF4351 LD | Lock detect, read by the script |
+| Pi pin 1 (3.3 V) | ADS1115 VDD, op-amp pin 8 | Leave the ADF4351 board's own 3.3 V pin unconnected |
+| Pi pin 3 (GPIO2, SDA) | ADS1115 SDA |  |
+| Pi pin 5 (GPIO3, SCL) | ADS1115 SCL | ADS1115 ADDR to GND (address 0x48) |
+| ADF4351 RF out (SMA) | Amp IN (SMA) | SMA male-male cable |
+| Amp OUT (SMA) | Antenna pigtail | Loop right beside the diamond |
+
+**Photodiode amplifier (MCP6002 pins: 1 OUTA, 2 INA−, 3 INA+, 4 VSS, 5 INB+, 6 INB−, 7 OUTB, 8 VDD):** pin 8 to 3.3 V and pin 4 to GND with 100 nF across them; pin 3 to GND; BPW34 cathode to pin 2, anode to GND; 10 MΩ and 10 pF in parallel from pin 1 to pin 2; pin 1 to ADS1115 A0; unused half: pin 5 to GND, pin 6 tied to pin 7.
 
 ### Parts (BOM)
 
-V2 purchase list. Prices are approximate USD from the listed source as of Oct 27, 2026.
+Prices are approximate USD as of Oct 27, 2026. Total about $300 to $360 including the $200 diamond, before shipping.
 
 | Item | Part number | Qty | Source | Approx. cost | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Assembled V2 board | Uncut Gem V2 Rev 0.2, JLCPCB PCBA | 2 | JLCPCB | $120 to $180 for 2 (estimate) | Per D6; files in vault |
-| Spare amplifiers | NXP MMG3014NT1 (LCSC C2151399) | 2 to 4 | LCSC | about $4 each | End-of-life; per D4 |
-| NV diamond | Adámas FMDNVLN1-10mg | 1 | Adámas (quote) | pending | Per D2 |
+| Raspberry Pi 4 Model B and official supply | owned | 1 |  | $0 | Per D4, D5 |
+| Synthesizer | 35M-4.4GHz ADF4351 development board (bare, 25 MHz reference) | 1 | AliExpress or similar | about $25 to $45 | Per D4 |
+| RF amplifier | 30 to 4000 MHz, 40 dB board, 5 V | 1 | AliExpress or similar | about $6 to $15 | Per D4 |
+| SMA cable | SMA male to SMA male, 10 to 15 cm | 1 | any | about $5 | Synth to amp |
+| Antenna pigtail | SMA male to bare wire (RG316) | 1 | any | about $5 | Solder the loop to it |
+| ADC | ADS1115 module (Adafruit 1085 or generic) | 1 | Adafruit, DigiKey, Amazon | about $5 to $15 | Per D6 |
+| Op-amp | Microchip MCP6002-I/P (DIP-8) | 2 | DigiKey | under $1 each | Per D6 |
+| Small parts | 10 MΩ, 1 MΩ and 10 kΩ ¼ W resistors; 10 pF and 100 nF ceramic capacitors | a few each | any | about $3 | 1 MΩ is the fallback if 10 MΩ saturates |
+| Build supplies | Perfboard, DIP-8 socket, female-female jumper wires | 1 set | any | about $10 |  |
+| NV diamond | Adámas ENMDNV800 (800 µm crystal in a 12.5 × 12.5 × 7 mm polymer block) | 1 | Adámas | $200 plus shipping | Per D2 |
 | Green LED | Cree C503B-GCN-CY0C0791 | 3 | DigiKey | about $1 each | Per D3 |
-| LED resistor | 100 Ω, ¼ W, through-hole | 3 | any | under $1 | Per D3 |
-| Photodiode | Vishay BPW34 | 2 | DigiKey or Mouser | about $1 to $2 each | Plugs into the PD1 socket; D4 on the board is not fitted |
-| Red filter | LEE 106 Primary Red, 21 × 48 in sheet | 1 | LEE Filters USA | $12 | Blocks green, passes red |
-| OLED | 1.3" 128×64 I2C, SH1106 driver, pins VCC-GND-SCL-SDA, 3 to 5 V | 1 to 2 | any | about $6 to $10 | Firmware uses Adafruit SH110X (SH1106), not SSD1306. Many modules are wired GND-VCC, which would reverse power on this board |
-| Headers | 2×3 male header (2.54 mm), 1×4 and 1×3 female sockets | 1 each | any | about $3 | Hand-solder |
+| LED resistor | 100 Ω, ¼ W | 3 | any | under $1 | Per D3 |
+| Photodiode | Vishay BPW34 | 2 | DigiKey or Mouser | about $1 to $2 each | Two wires to the perfboard |
+| Red filter | LEE 106 Primary Red sheet | 1 | LEE Filters USA | $12 | Blocks green, passes red |
 | Antenna wire | Enameled copper magnet wire, about 0.5 mm (24 AWG) | 1 spool | any | about $8 | Enameled only |
-| Epoxy | Clear 2-part epoxy | 1 | any | about $8 | For the diamond prism |
-| Power | USB-A power bank (2 A or more) plus USB-A to USB-C data cable | 1 | any | $0 to $25 | Per D5 |
+| Epoxy | Clear 2-part epoxy | 1 | any | about $8 | Optional; holds the block, gel and photodiode together |
 
-**Tools (not from the guide):** soldering iron and solder, multimeter, flush cutters, tweezers, small magnet, red film or red-passing goggles, a way to dim the room. No hot air or stencil needed if JLCPCB assembles the board.
+**Tools:** soldering iron and solder, multimeter, flush cutters, tweezers, small magnet, red film or red-passing goggles, a way to dim the room, and a monitor or SSH session for the Pi.
 
 ### Tickets
 
-**S1-01 · Read the repo build docs** Read BuildGuide, hardware/DiamondMount, firmware, and science folders and the open issues in the Uncut Gem repo. Note anything that changes the steps below. Done when: notes added to this doc; D3 and D4 can be answered.
+**S1-01 · Set up the Pi** Enable SPI and I2C, install the packages listed in `qc/nv-diamond/pi/README.md`, and copy the `pi/` folder to the Pi. Done when: `python3 sweep.py --sim --plot` saves a PNG with a dip at 2870 MHz.
 
-**S1-02 · Order parts** Order everything in the purchase list once D1 to D6 are closed. Done when: all parts received and checked against the list.
+**S1-02 · Order parts** Order everything in the parts list once D1 to D7 are closed. Done when: all parts received and checked against the list.
 
-**S1-03 · Order assembled boards** Upload the Gerbers zip plus the BOM and CPL from `qc/nv-diamond/jlcpcb/` to JLCPCB (PCB plus top-side assembly, qty 2), fix any rotations flagged in the preview, and order. Done when: boards received.
+**S1-03 · Build the photodiode amplifier** Build the MCP6002 stage on perfboard per the wiring section. Done when: with the photodiode covered the output reads near 0 V, and room light raises it.
 
-**S1-04 · Build the diamond prism** Embed the diamond in epoxy on the photodiode with red filter gel between them, following hardware/DiamondMount. Diamond sinks in most epoxies, so expect to layer it. Done when: prism cured, photodiode leads intact, diamond sits in the light path.
+**S1-04 · Mount the diamond** Stand the polymer block on one 12.5 mm face, with a square of red gel between it and the photodiode, the photodiode centered under the crystal. Aim the LED at the crystal through a side face so little green reaches the photodiode directly. A dab of epoxy or tape holds it all together. Done when: block, gel and photodiode are fixed, and the crystal sits in the LED's beam.
 
-**S1-05 · Solder through-hole parts** Solder the 2×3 header at 5V\_SUPP1, the 1×4 socket at OLED1 and the 1×3 socket at PD1. Leave C34/C35 off; they only turn the op-amps into integrators. Done when: no solder bridges under magnification.
+**S1-05 · Wire the ADS1115** Done when: `i2cdetect -y 1` shows 0x48 and the reading changes when you shade the photodiode.
 
-**S1-06 · Inspect the assembled board** Check the QFNs (U1, U8) and the amps (U2, U3) for bridges and correct orientation. Done when: no visible defects.
+**S1-06 · Wire the ADF4351 board** Connect 5 V, GND, DATA, CLK, LE (with 10 kΩ to GND), CE and LD per the wiring table. Done when: the lock-detect pin reads high after setting 2614, 2870 and 3126 MHz from Python.
 
-**S1-07 · Continuity check** With no power, check that 5 V, 3.3 V and GND are not shorted to each other. Done when: no shorts.
+**S1-07 · Add the amplifier and antenna** Join synth to amp with the SMA cable, power the amp from Pi pin 2, and fit the antenna pigtail with a small loop pressed against the block face nearest the crystal. The crystal sits a few millimeters inside the block, so keep the loop flat on the polymer. Done when: no shorts; the loop is centered on the crystal.
 
-**S1-08 · Fit standoffs** Bolt in brass PCB standoffs before placing boards. Done when: board sits level and stable.
+**S1-08 · Connect the light source** LED anode to Pi pin 4, cathode through 100 Ω to GND (always on, per D3). Done when: it lights at power-up.
 
-**S1-09 · First power-up** Power from USB with the A-to-C cable. Done when: PWR LED lights; 5 V at 5V\_SUPP1 pin 2, 3.3 V at the LM1117 output (U6), 2.5 V at the R13/R14 divider (FAKE\_GND). Any wrong reading: unplug and find the short.
+**S1-09 · Align light and diamond** Hold the LED on stiff enameled wire; adjust while watching through red film. Done when: the diamond glows red and the ADC reading sits well above the dark level.
 
-**S1-10 · Flash firmware** Install the Adafruit SH110X and Adafruit GFX libraries, then compile and upload the Arduino IDE firmware from the repo's firmware folder over the board's USB-C (CP2102N; use the BOOT/EN buttons if auto-reset fails). If no serial port appears, flip the USB-C plug. Done when: upload succeeds and serial output appears.
+**S1-10 · First sweep** Dim the room and run `python3 sweep.py --sweeps 10 --plot` (2614 to 3126 MHz in 4 MHz steps). Done when: the plot shows a dip near 2870 MHz.
 
-**S1-11 · Fit the OLED** Plug the 1.3" SH1106 module into OLED1, checking that its pin 1 is VCC. Done when: the display lights at power-up.
+**S1-11 · Magnet test** Bring a small magnet toward the diamond slowly and sweep again. Done when: the dip splits into separate pairs that move as you turn the magnet, and the single dip returns when the magnet is removed.
 
-**S1-12 · RF lock check** Power up. Done when: the on-board LOCK LED lights (ADF4351 locked to the 10 MHz oscillator).
+**S1-12 · Control test** Block the light to the diamond with a small paper cutout and sweep again. Done when: the dip disappears (proves the signal is fluorescence, not electrical pickup).
 
-**S1-13 · Connect the light source** Solder the 100 Ω resistor to the LED cathode; connect the anode to 5V\_SUPP1 pin 4 and the resistor to pin 5 (always on, per D3). Done when: it lights at power-up.
-
-**S1-14 · Connect the photodiode** Plug in the connector from the diamond prism. Done when: seated, polarity correct.
-
-**S1-15 · Connect the antenna** Solder a small enameled wire loop to the J4 pads (center pad and ground), positioned right beside the diamond. Done when: joint inspected, no shorts.
-
-**S1-16 · Final short check and boot** Done when: OLED shows "Calibrating..." on power-up.
-
-**S1-17 · Align light and diamond** Hold the light source on stiff enameled wire; adjust while watching through red film. Done when: the diamond glows bright red.
-
-**S1-18 · First sweep** Dim the room, power up, look at the lower half of the OLED. The sweep runs 2.614 to 3.126 GHz in 4 MHz steps (128 points). If no pattern, open the serial port and confirm data arrives. Done when: a dip near 2.87 GHz is visible.
-
-**S1-19 · Magnet test** Bring a small magnet toward the diamond slowly. Done when: the dip visibly widens or spreads and returns when the magnet is removed.
-
-**S1-20 · Control test** Block the light to the diamond with a small paper cutout and repeat S1-19. Done when: the magnet response disappears (proves the signal is fluorescence, not electrical pickup).
-
-**S1-21 · Log sweeps to a laptop (suggested addition)** Capture serial output to CSV with a timestamp and the room temperature, and plot it. The published build has no calibration procedure or expected signal levels, so your logs become the baseline for Stage 2. Done when: a script in the repo saves and plots a sweep with and without a magnet.
+**S1-13 · Baseline log** Run sweeps with `--temp` and `--note`, with and without a magnet, and commit the CSVs and plots to the repo. The published build has no expected signal levels, so these become the baseline for Stage 2. Done when: a labeled set of sweeps is saved.
 
 ### Troubleshooting
 
-- No power or no serial port: flip the USB-C plug (only one orientation is wired); use an A-to-C cable.
-- No LOCK LED: check 3.3 V at U6 and the 10 MHz oscillator (X1).
-- Blank display: check the OLED pin order (VCC-GND-SCL-SDA) and that it is an SH1106 module.
-- No display pattern: check serial output, the photodiode connector, and the op-amp.
+- Nothing at 0x48: check SDA/SCL, 3.3 V, ADDR to GND, and that I2C is enabled.
+- Script warns the PLL is unlocked: check CE is high, the LE pull-down, 5 V at the synth board, and that DATA and CLK aren't swapped; confirm it's the bare board with a 25 MHz reference.
+- Reading stuck near 3.3 V: the photodiode amp is saturated; swap 10 MΩ for 1 MΩ or shade stray light.
+- Reading stuck near 0 V: photodiode reversed or not lit; the cathode goes to op-amp pin 2.
 - No red glow: re-aim the LED; check its polarity and the resistor.
-- No magnet response: confirm the sweep covers 2.87 GHz, then the antenna joint, then diamond alignment. Check the repo's open issues.
+- No dip: check the amp board has power, the SMA joints are tight and the loop is close; narrow the sweep (`--start 2820 --stop 2920 --step 0.5`) and add sweeps.
 
 ## Stage 2: Cleaner instrument
 
@@ -157,7 +173,7 @@ The same chain, upgraded at every weak point: a bulk diamond plate instead of po
 
 **S2-02 · Buy the bulk NV diamond plate** Done when: plate received with its spec sheet (nitrogen and NV concentration, orientation).
 
-**S2-03 · Build the optics** Light focusing and red collection per the paper. Done when: red signal at the photodiode is clearly higher than with the Stage 1 prism.
+**S2-03 · Build the optics** Light focusing and red collection per the paper. Done when: red signal at the photodiode is clearly higher than with the Stage 1 mount.
 
 **S2-04 · Set up the lock-in (Red Pitaya)** Modulate the microwaves at a few kHz and demodulate the photodiode signal at that rate. Done when: a sweep shows the resonance with visibly lower noise than an unmodulated sweep.
 
@@ -175,7 +191,7 @@ The same chain, upgraded at every weak point: a bulk diamond plate instead of po
 
 ### What it is
 
-Stages 1 and 2 run everything continuously. Stage 3 times everything: a green pulse to reset, a microwave pulse of chosen length to rotate the spin, a green pulse to read. A fixed bias magnet separates the two dips so you drive only one of them, which gives a clean two-level qubit. The ESP32 is too slow for this, so it needs a fast microwave switch, a nanosecond pulse sequencer, and light that can be switched quickly.
+Stages 1 and 2 run everything continuously. Stage 3 times everything: a green pulse to reset, a microwave pulse of chosen length to rotate the spin, a green pulse to read. A fixed bias magnet separates the two dips so you drive only one of them, which gives a clean two-level qubit. The Pi and ADS1115 are too slow for this, so it needs a fast microwave switch, a nanosecond pulse sequencer, and light that can be switched quickly.
 
 ### What it looks like when done
 
