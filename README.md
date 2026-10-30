@@ -1,8 +1,7 @@
 # NV Diamond Qubit Project
 
 Oct 26, 2026 · @Charlie
-
-## *WARNING: AI Generated, I will start editing this as I put it together*
+### WARNING: 90% AI Generated
 
 ## How to use this doc
 
@@ -12,7 +11,7 @@ This is the build plan only; theory lives in a separate file. Each stage is a **
 
 | Stage | Goal | What you have at the end | Rough cost | Status |
 | --- | --- | --- | --- | --- |
-| 1. Uncut Gem on Pi | See the spin resonance | Pi 4 plus RF modules; a plot shows a dip near 2.87 GHz that reacts to a magnet | about $300 to $360 including the diamond | Ready to start |
+| 1. Uncut Gem on Pi | See the spin resonance | Pi 4 plus RF modules; a plot shows a dip near 2.87 GHz that reacts to a magnet | about $340 to $400 including the diamond | Ready to start |
 | 2. Cleaner instrument | Measure with it | Bench setup; laptop shows clean, calibrated dip pairs | about $4,500 in the published build | Needs BOM |
 | 3. Pulsed control | Control it as a qubit | Rabi oscillation curve you produce on purpose | Not scoped | Scope after Stage 1 |
 | 4. Research grade | Single NV, few-qubit register | Reference only | Tens of thousands of dollars | Out of scope |
@@ -33,20 +32,20 @@ Every stage runs the same chain and upgrades one weak link: **green light in, mi
 
 **D1 · Diamond: powder now or bulk now** Stage 1 is designed around cheap microdiamond powder (many tiny crystals, random orientations, smeared signal). A bulk plate (one crystal, fixed orientations, clean signal) costs much more and is the Stage 2 upgrade. Decided Oct 26, 2026: microdiamond powder now, bulk plate in Stage 2. Revised Oct 28, 2026: a single \~800 µm NV crystal instead of powder, on Adámas's recommendation. One crystal has only four NV axis directions, so a magnet gives clean, separate dip pairs instead of one smeared dip; a polished plate stays the Stage 2 upgrade. Status: closed.
 
-**D2 · Diamond supplier** Decided Oct 27, 2026: Adámas Nanotechnologies (Raleigh, NC), Encapsulated 800 µm NV microdiamond, **SKU ENMDNV800, $200**: one \~800 µm crystal sealed in a clear polymer block about 12.5 × 12.5 × 7 mm, shipped with its own ODMR spectrum. Recommended by Marco Torelli at Adámas for this kind of build; it replaces the powder grade FMDNVLN1-10mg. Reply drafted in Gmail asking about lead time, shipping, polymer transparency, crystal orientation and the conditions behind their ODMR data (not sent). Element Six sells bulk plates only, so it moves to Stage 2. **Done when:** lead time and shipping to NM recorded and the order placed.
+**D2 · Diamond supplier** Decided Oct 27, 2026: Adámas Nanotechnologies (Raleigh, NC), Encapsulated 800 µm NV microdiamond, **SKU ENMDNV800, $200**: one \~800 µm crystal sealed in a clear polymer block about 12.5 × 12.5 × 7 mm, shipped with its own ODMR spectrum. Recommended by Marco Torelli at Adámas for this kind of build; it replaces the powder grade FMDNVLN1-10mg. Adámas confirmed (Oct 28): the resin is clear for both green excitation and red emission; the crystal usually sits centered and near one face, and placement can be specified; orientation characterization costs about $40 extra. Going with orientation characterization, and asking for the crystal near one marked 12.5 mm face. Order reply drafted in Gmail asking for the total, lead time, how to order and pay, and the ODMR measurement conditions (not sent). Element Six sells bulk plates only, so it moves to Stage 2. **Done when:** lead time and shipping to NM recorded and the order placed. Order placed Oct 30, 2026 (ENMDNV800, listed on Adámas's single-particle sensors page); lead time and shipping still to record. Status: ordered.
 
 **D3 · Light source: LED or laser** Decided Oct 27, 2026: green LED, **Cree C503B-GCN-CY0C0791** (5 mm, 527 nm, 30° beam, 3.2 V typical / 4.0 V max at 20 mA, 30 mA max) with a **100 Ω ¼ W** series resistor: I = (5 V − 3.2 V) / 100 Ω ≈ 18 mA. Wire it always on: anode to Pi header pin 4 (5 V), cathode through the resistor to GND. Trade-off accepted: less light on the diamond than a laser, so a smaller dip. **Status:** closed.
 
 **D4 · Platform and RF hardware** Decided Oct 27, 2026: your Raspberry Pi 4 Model B replaces the Uncut Gem's ESP32 and custom board. The RF side reuses the module pair the Uncut Gem V1 used.
 
-- **Synthesizer:** "35M-4.4GHz ADF4351 development board": the bare board with a 10-pin control header, 25 MHz onboard reference, SMA outputs, 5 V in at about 110 to 145 mA. Buy the bare board, not versions with an STM32 controller or touchscreen. Output is close to 0 dBm over most of its range. Its logic is 3.3 V, so it wires straight to the Pi. About $25 to $45.
-- **Amplifier:** 30 to 4000 MHz, 40 dB broadband amplifier board, 5 V at 135 mA, about +20 dBm at 1 dB compression; the same type V1 used. About $6 to $15. Gain at 2.87 GHz isn't published; expect less than 40 dB near the top of its range, which is still plenty.
-- **Antenna:** an SMA male pigtail with a small enameled-wire loop soldered on, placed at the diamond.
+- **Synthesizer:** ordered Oct 29, 2026: an "ADF435X EVAL Board" clone. It carries the ADF4351, an onboard Cypress CY7C68013A USB controller, a 25 MHz reference (X1), OUT+ and OUT− SMA outputs, and a DC 5 to 9 V barrel jack. Before wiring, pull the three green jumpers on header P3, which connect the onboard USB controller to the synth's control lines, then check with a multimeter that header P2's LE, CLK and DAT still reach the synth. The Pi drives it through the 10-pin header P2. Output is close to 0 dBm over most of its range; logic is 3.3 V. Fallback: with the P3 jumpers back in, the board's mini-USB plus the open-source adf435x Python library drives it with no SPI wiring.
+- **Amplifier:** ordered Oct 29, 2026: Walfront 30-4000MHz 40dB RF Broad Band Amplifier Module ($8.79), 5 V at 135 mA, about +20 dBm at 1 dB compression; the same type V1 used. The synth's output plus 40 dB is far past that ceiling, so the amp runs saturated; if the dip shape changes with power, lower the synth with --power -4. Gain at 2.87 GHz isn't published; expect less than 40 dB near the top of its range, which is still plenty.
+- **Antenna:** ordered Oct 29, 2026: an RG316 SMA male to bare-wire pigtail (2-pack, 80 cm: 57 cm coax plus 19 cm of red and black leads). Cut the leads off and make the loop from the coax itself: at 2.87 GHz the wavelength is about 10.4 cm, so 19 cm of unshielded wire radiates instead of feeding the loop. Also ordered: a 15 cm SMA male-to-male RG316 jumper (5-pack) for synth OUT+ to amp IN, and a 50 Ω SMA male terminator for the synth's unused OUT− port.
 - **V2 custom board:** shelved. The JLCPCB files stay in the vault at `qc/nv-diamond/jlcpcb/`.
 
 **Status:** closed.
 
-**D5 · Power supply** Decided Oct 27, 2026: the official Raspberry Pi 4 USB-C supply (5.1 V, 3 A) powers everything. The ADF4351 board, amp board and LED draw about 300 mA from the Pi's 5 V pins (2 and 4); the ADS1115 and op-amp take a few mA from 3.3 V (pin 1). **Status:** closed.
+**D5 · Power supply** Decided Oct 27, 2026: the official Raspberry Pi 4 USB-C supply (5.1 V, 3 A) powers everything. The ADF4351 board takes 5 V through its barrel jack, using the included USB-A to barrel cable plugged into one of the Pi's USB ports (about 110 to 145 mA); the amp board and LED draw about 155 mA from the Pi's 5 V pins (2 and 4); the ADS1115 and op-amp take a few mA from 3.3 V (pin 1). **Status:** closed.
 
 **D6 · Photodiode amplifier and ADC** Decided Oct 27, 2026. The Pi has no analog inputs and its pins are 3.3 V only, so:
 
@@ -63,6 +62,43 @@ Every stage runs the same chain and upgrades one weak link: **green light in, mi
 
 Your Pi 4 runs a Python script that tells an ADF4351 synthesizer board which microwave frequency to make; an amplifier board boosts it; a wire loop antenna radiates it at a single diamond crystal sealed in a polymer block. A green LED makes the diamond glow red; a red filter passes only that glow to a photodiode; a one-stage op-amp turns the photodiode current into a voltage; an ADS1115 converts it for the Pi, which logs brightness vs frequency and plots it.
 
+The whole build, as wired. Left column: the microwave chain from the Pi down to the diamond. Right column: the light readout from the diamond back up to the Pi.
+
+```text
+                    ┌────────────────────────────────┐
+                    │     Raspberry Pi 4 Model B     │
+                    │        (runs sweep.py)         │
+                    └──┬──────────┬───────────────▲──┘
+       SPI + CE + LD   │          │ 5 V (pins 2,4)│  I2C (SDA/SCL)
+       via header P2   │          │ + USB barrel  │
+                       ▼          │               │
+   ┌───────────────────────┐      │      ┌────────┴────────┐
+   │ ADF4351 EVAL synth    │◄─────┤      │ ADS1115 ADC     │
+   │ sweeps 2614-3126 MHz  │      │      │ 16-bit, 0x48    │
+   └──┬─────────────────┬──┘      │      └────────▲────────┘
+  OUT+│             OUT−│         │               │ A0 (volts)
+      │          50 Ω terminator  │      ┌────────┴────────┐
+      │ 15 cm SMA jumper          │      │ MCP6002 op-amp  │
+      ▼                           │      │ 10 MΩ ∥ 10 pF   │
+   ┌───────────────────────┐      │      └────────▲────────┘
+   │ 40 dB RF amp          │◄─────┘               │ photocurrent
+   │ about +20 dBm out     │             ┌────────┴────────┐
+   └──────────┬────────────┘             │ BPW34 photodiode│
+              │ RG316 pigtail            └────────▲────────┘
+              ▼                                   │ red only
+        2-3 mm wire loop                 ┌────────┴────────┐
+              │ microwaves               │ LEE 106 red gel │
+              ▼                          └────────▲────────┘
+   ┌───────────────────────────────────┐          │ red glow
+   │  ENMDNV800 diamond block          ├──────────┘
+   │  dims at the 2.87 GHz resonance   │
+   └───────────────────────────────────┘
+              ▲ green light
+   ┌──────────┴────────────┐
+   │ green LED + 100 Ω     │  5 V from Pi pin 4
+   └───────────────────────┘
+```
+
 ### What it looks like when done
 
 - On the bench in a dimmed room: the Pi, two small RF boards joined by an SMA cable, and a perfboard with the op-amp; green LED lit, diamond glowing faintly red through red film.
@@ -72,11 +108,11 @@ Your Pi 4 runs a Python script that tells an ADF4351 synthesizer board which mic
 
 ### Wiring
 
-Pi header pins are physical pin numbers. Match the ADF4351 board by its silkscreen labels; pin order differs between board versions.
+Pi header pins are physical pin numbers. The ADF4351 board's control lines are on its 10-pin header P2, printed LE, CLK, DAT, GD, 3V3 on one row and MUX, LD, PDR, CE, GD on the other; wire by those labels. Pull the three green P3 jumpers first. Power the board through its barrel jack with the included USB-to-barrel cable in a Pi USB port. Leave P2's 3V3, MUX and PDR unconnected.
 
 | From | To | Notes |
 | --- | --- | --- |
-| Pi pin 2 (5 V) | ADF4351 board 5 V in, amp board 5 V | About 280 mA together |
+| Pi pin 2 (5 V) | Amp board 5 V | About 135 mA; the synth is powered from a Pi USB port instead |
 | Pi pin 4 (5 V) | LED anode | LED cathode, then 100 Ω, then GND |
 | Pi pin 6 (GND) | ADF4351 GND, amp GND, ADS1115 GND, op-amp pin 4 | One common ground |
 | Pi pin 19 (GPIO10, MOSI) | ADF4351 DATA |  |
@@ -87,33 +123,34 @@ Pi header pins are physical pin numbers. Match the ADF4351 board by its silkscre
 | Pi pin 1 (3.3 V) | ADS1115 VDD, op-amp pin 8 | Leave the ADF4351 board's own 3.3 V pin unconnected |
 | Pi pin 3 (GPIO2, SDA) | ADS1115 SDA |  |
 | Pi pin 5 (GPIO3, SCL) | ADS1115 SCL | ADS1115 ADDR to GND (address 0x48) |
-| ADF4351 RF out (SMA) | Amp IN (SMA) | SMA male-male cable |
-| Amp OUT (SMA) | Antenna pigtail | Loop right beside the diamond |
+| ADF4351 OUT+ (SMA) | Amp IN (SMA) | 15 cm SMA male-male jumper; 50 Ω terminator on OUT− |
+| Amp OUT (SMA) | Antenna pigtail | Loop made from the coax, leads cut off, right beside the diamond |
 
 **Photodiode amplifier (MCP6002 pins: 1 OUTA, 2 INA−, 3 INA+, 4 VSS, 5 INB+, 6 INB−, 7 OUTB, 8 VDD):** pin 8 to 3.3 V and pin 4 to GND with 100 nF across them; pin 3 to GND; BPW34 cathode to pin 2, anode to GND; 10 MΩ and 10 pF in parallel from pin 1 to pin 2; pin 1 to ADS1115 A0; unused half: pin 5 to GND, pin 6 tied to pin 7.
 
 ### Parts (BOM)
 
-Prices are approximate USD as of Oct 27, 2026. Total about $300 to $360 including the $200 diamond, before shipping.
+Prices are approximate USD as of Oct 27, 2026; ordered parts show the price paid where known. The Status column tracks each part from To order to Ordered to Received; change it as parts arrive. Total about $340 to $400 including the diamond with orientation characterization, before shipping.
 
-| Item | Part number | Qty | Source | Approx. cost | Notes |
-| --- | --- | --- | --- | --- | --- |
-| Raspberry Pi 4 Model B and official supply | owned | 1 |  | $0 | Per D4, D5 |
-| Synthesizer | 35M-4.4GHz ADF4351 development board (bare, 25 MHz reference) | 1 | AliExpress or similar | about $25 to $45 | Per D4 |
-| RF amplifier | 30 to 4000 MHz, 40 dB board, 5 V | 1 | AliExpress or similar | about $6 to $15 | Per D4 |
-| SMA cable | SMA male to SMA male, 10 to 15 cm | 1 | any | about $5 | Synth to amp |
-| Antenna pigtail | SMA male to bare wire (RG316) | 1 | any | about $5 | Solder the loop to it |
-| ADC | ADS1115 module (Adafruit 1085 or generic) | 1 | Adafruit, DigiKey, Amazon | about $5 to $15 | Per D6 |
-| Op-amp | Microchip MCP6002-I/P (DIP-8) | 2 | DigiKey | under $1 each | Per D6 |
-| Small parts | 10 MΩ, 1 MΩ and 10 kΩ ¼ W resistors; 10 pF and 100 nF ceramic capacitors | a few each | any | about $3 | 1 MΩ is the fallback if 10 MΩ saturates |
-| Build supplies | Perfboard, DIP-8 socket, female-female jumper wires | 1 set | any | about $10 |  |
-| NV diamond | Adámas ENMDNV800 (800 µm crystal in a 12.5 × 12.5 × 7 mm polymer block) | 1 | Adámas | $200 plus shipping | Per D2 |
-| Green LED | Cree C503B-GCN-CY0C0791 | 3 | DigiKey | about $1 each | Per D3 |
-| LED resistor | 100 Ω, ¼ W | 3 | any | under $1 | Per D3 |
-| Photodiode | Vishay BPW34 | 2 | DigiKey or Mouser | about $1 to $2 each | Two wires to the perfboard |
-| Red filter | LEE 106 Primary Red sheet | 1 | LEE Filters USA | $12 | Blocks green, passes red |
-| Antenna wire | Enameled copper magnet wire, about 0.5 mm (24 AWG) | 1 spool | any | about $8 | Enameled only |
-| Epoxy | Clear 2-part epoxy | 1 | any | about $8 | Optional; holds the block, gel and photodiode together |
+| Item | Part number | Qty | Source | Approx. cost | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| Raspberry Pi 4 Model B and official supply | owned | 1 |  | $0 | Owned | Per D4, D5 |
+| Synthesizer | ADF435X EVAL Board clone (ADF4351 plus onboard CY7C68013A USB controller, 25 MHz reference, USB-to-barrel power cable included) | 1 | AliExpress or similar |  | Ordered | Ordered Oct 29, 2026; per D4 |
+| RF amplifier | Walfront 30-4000MHz 40dB RF Broad Band Amplifier Module, 5 V | 1 | Walfront | $8.79 | Ordered | Ordered Oct 29, 2026; per D4 |
+| SMA jumper | SMA male to SMA male, RG316, 15 cm (5-pack) | 1 pack | any | about $5 to $10 | Ordered | Ordered Oct 29, 2026; synth OUT+ to amp IN; spares for later stages |
+| Antenna pigtail | SMA male to bare wire, RG316, 80 cm (57 cm coax plus 19 cm red and black leads; 2-pack) | 1 pack | any | about $5 to $10 | Ordered | Ordered Oct 29, 2026; cut off the leads and make the loop from the coax (S1-07); second one is a spare |
+| SMA terminator | 50 Ω SMA male load, DC to 18 GHz, VSWR 1.25:1 | 1 | any | about $3 to $5 | Ordered | Ordered Oct 29, 2026; on synth OUT− only, never on the amp |
+| ADC | ADS1115 module (Adafruit 1085 or generic) | 1 | Adafruit, DigiKey, Amazon | about $5 to $15 | To order | Per D6 |
+| Op-amp | Microchip MCP6002-I/P (DIP-8) | 2 | DigiKey | under $1 each | To order | Per D6 |
+| Small parts | 10 MΩ, 1 MΩ and 10 kΩ ¼ W resistors; 10 pF and 100 nF ceramic capacitors | a few each | any | about $3 | To order | 1 MΩ is the fallback if 10 MΩ saturates |
+| Build supplies | Perfboard, DIP-8 socket, female-female jumper wires | 1 set | any | about $10 | To order |  |
+| NV diamond | Adámas ENMDNV800 (800 µm crystal in a 12.5 × 12.5 × 7 mm polymer block) | 1 | [Adámas](https://www.adamasnano.com/single-particle-sensors) | $200, plus about $40 for orientation, plus shipping | Ordered | Ordered Oct 30, 2026; per D2 |
+| Green LED | Cree C503B-GCN-CY0C0791 | 3 | DigiKey | about $1 each | To order | Per D3 |
+| LED resistor | 100 Ω, ¼ W | 3 | any | under $1 | To order | Per D3 |
+| Photodiode | Vishay BPW34 | 2 | DigiKey or Mouser | about $1 to $2 each | To order | Two wires to the perfboard |
+| Red filter | LEE 106 Primary Red sheet | 1 | LEE Filters USA | $12 | To order | Blocks green, passes red |
+| Antenna wire | Enameled copper magnet wire, about 0.5 mm (24 AWG) | 1 spool | any | about $8 | To order | Optional now that the loop is made from the pigtail's coax |
+| Epoxy | Clear 2-part epoxy | 1 | any | about $8 | To order | Optional; holds the block, gel and photodiode together |
 
 **Tools:** soldering iron and solder, multimeter, flush cutters, tweezers, small magnet, red film or red-passing goggles, a way to dim the room, and a monitor or SSH session for the Pi.
 
@@ -129,9 +166,9 @@ Prices are approximate USD as of Oct 27, 2026. Total about $300 to $360 includin
 
 **S1-05 · Wire the ADS1115** Done when: `i2cdetect -y 1` shows 0x48 and the reading changes when you shade the photodiode.
 
-**S1-06 · Wire the ADF4351 board** Connect 5 V, GND, DATA, CLK, LE (with 10 kΩ to GND), CE and LD per the wiring table. Done when: the lock-detect pin reads high after setting 2614, 2870 and 3126 MHz from Python.
+**S1-06 · Wire the ADF4351 board** Pull the three green P3 jumpers and confirm with a multimeter that P2's LE, CLK and DAT still reach the synth side. Power the board through its barrel jack from a Pi USB port, then connect GND, DAT, CLK, LE (with 10 kΩ to GND), CE and LD from header P2 per the wiring table. Done when: the lock-detect pin reads high after setting 2614, 2870 and 3126 MHz from Python.
 
-**S1-07 · Add the amplifier and antenna** Join synth to amp with the SMA cable, power the amp from Pi pin 2, and fit the antenna pigtail with a small loop pressed against the block face nearest the crystal. The crystal sits a few millimeters inside the block, so keep the loop flat on the polymer. Done when: no shorts; the loop is centered on the crystal.
+**S1-07 · Add the amplifier and antenna** Join synth OUT+ to amp IN with the 15 cm SMA jumper, screw the 50 Ω terminator onto synth OUT−, and power the amp from Pi pin 2 (5 V) and a GND pin. Make the loop: cut the pigtail about 1 cm on the coax side of the heat-shrink, dropping the red and black leads; strip about 1 cm of jacket and twist the braid into a short tail; strip about 7 mm of the inner insulation; bend the centre conductor into a loop 2 to 3 mm across and solder its tip to the braid. Screw the pigtail onto amp OUT, with the loop pressed against the block face nearest the crystal. The crystal sits a few millimeters inside the block, so keep the loop flat on the polymer. Done when: no shorts; the terminator is on OUT− (never on the amp); the loop is centered on the crystal.
 
 **S1-08 · Connect the light source** LED anode to Pi pin 4, cathode through 100 Ω to GND (always on, per D3). Done when: it lights at power-up.
 
@@ -148,7 +185,7 @@ Prices are approximate USD as of Oct 27, 2026. Total about $300 to $360 includin
 ### Troubleshooting
 
 - Nothing at 0x48: check SDA/SCL, 3.3 V, ADDR to GND, and that I2C is enabled.
-- Script warns the PLL is unlocked: check CE is high, the LE pull-down, 5 V at the synth board, and that DATA and CLK aren't swapped; confirm it's the bare board with a 25 MHz reference.
+- Script warns the PLL is unlocked: check CE is high, the LE pull-down, that the barrel-jack cable is in, that the three P3 jumpers are out, and that DAT and CLK aren't swapped.
 - Reading stuck near 3.3 V: the photodiode amp is saturated; swap 10 MΩ for 1 MΩ or shade stray light.
 - Reading stuck near 0 V: photodiode reversed or not lit; the cathode goes to op-amp pin 2.
 - No red glow: re-aim the LED; check its polarity and the resistor.
